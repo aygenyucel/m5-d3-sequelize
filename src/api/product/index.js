@@ -19,6 +19,14 @@ productRouter.get("/", async (req, res, next) => {
     if (req.query.name) {
       query.name = { [Op.iLike]: `${req.query.name}%` };
     }
+    if (req.query.priceMin && req.query.priceMax) {
+      query.price = {
+        [Op.and]: {
+          [Op.gte]: req.query.priceMin,
+          [Op.lte]: req.query.priceMax,
+        },
+      };
+    }
     const products = await ProductModel.findAll({
       where: { ...query },
     });
@@ -49,13 +57,13 @@ productRouter.get("/:productId", async (req, res, next) => {
 });
 productRouter.put("/:productId", async (req, res, next) => {
   try {
-    const [numberOfUpdatedRows, updatedRecords] = ProductModel.update(
+    const [numberOfUpdatedRows, updatedRecords] = await ProductModel.update(
       req.body,
       { where: { id: req.params.productId }, returning: true }
     );
 
     if (numberOfUpdatedRows === 1) {
-      res.send(updatedRecords[0]);
+      res.send(updatedRecords);
     } else {
       next(
         createHttpError(
@@ -68,9 +76,10 @@ productRouter.put("/:productId", async (req, res, next) => {
     next(error);
   }
 });
+
 productRouter.delete("/:productId", async (req, res, next) => {
   try {
-    const numberOfDeletedRows = ProductModel.destroy({
+    const numberOfDeletedRows = await ProductModel.destroy({
       where: { id: req.params.productId },
     });
     if (numberOfDeletedRows === 1) {
