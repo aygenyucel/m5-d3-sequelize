@@ -27,6 +27,11 @@ productRouter.get("/", async (req, res, next) => {
         },
       };
     }
+    if (req.query.category) {
+      query.category = {
+        [Op.iLike]: `${req.query.category}%`,
+      };
+    }
     const products = await ProductModel.findAll({
       where: { ...query },
     });
