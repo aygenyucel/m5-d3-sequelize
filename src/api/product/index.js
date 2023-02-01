@@ -1,5 +1,6 @@
 import express from "express";
 import createHttpError from "http-errors";
+import { Op } from "sequelize";
 import ProductModel from "./model.js";
 
 const productRouter = express.Router();
@@ -14,7 +15,13 @@ productRouter.post("/", async (req, res, next) => {
 });
 productRouter.get("/", async (req, res, next) => {
   try {
-    const products = await ProductModel.findAll({});
+    const query = {};
+    if (req.query.name) {
+      query.name = { [Op.iLike]: `${req.query.name}%` };
+    }
+    const products = await ProductModel.findAll({
+      where: { ...query },
+    });
     res.send(products);
   } catch (error) {
     next(error);
